@@ -9,3 +9,5 @@ it's forked from https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase
 at "Deployed from [4351c386f60d](https://hg.mozilla.org/hgcustom/version-control-tools/rev/4351c386f60d) at 2022-03-16T17:25:32Z."
 
 ## Changes I did:
+
+- make struct fields `RemoteDirEntry` and `RemoteFileMetadata` public 
