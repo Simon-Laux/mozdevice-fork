@@ -755,7 +755,6 @@ impl Device {
                 }
 
                 let file_type = (mode >> 13) & 0b111;
-                println!("File {}: {} file_type {}", name, mode, file_type);
                 let metadata = match file_type {
                     0b100 => RemoteMetadata::RemoteFile(RemoteFileMetadata {
                         mode: mode & 0b111111111,
