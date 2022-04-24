@@ -382,6 +382,10 @@ pub enum RemoteMetadata {
     RemoteFile(RemoteFileMetadata),
     RemoteDir,
     RemoteSymlink,
+    RemoteCharacterSpecialFile,
+    RemoteSocket,
+    RemoteBlock,
+    RemoteNamedPipe,
 }
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct RemoteFileMetadata {
@@ -667,6 +671,7 @@ impl Device {
             .and(Ok(()))
     }
 
+    /** recursivly list a directory */
     pub fn list_dir(&self, src: &UnixPath) -> Result<Vec<RemoteDirEntry>> {
         let src = src.to_path_buf();
         let mut queue = vec![(src.clone(), 0, "".to_string())];
@@ -688,7 +693,7 @@ impl Device {
         Ok(listings)
     }
 
-    fn list_dir_flat(
+    pub fn list_dir_flat(
         &self,
         src: &UnixPath,
         depth: usize,
@@ -750,13 +755,18 @@ impl Device {
                 }
 
                 let file_type = (mode >> 13) & 0b111;
+                println!("File {}: {} file_type {}", name, mode, file_type);
                 let metadata = match file_type {
-                    0b010 => RemoteMetadata::RemoteDir,
                     0b100 => RemoteMetadata::RemoteFile(RemoteFileMetadata {
                         mode: mode & 0b111111111,
                         size,
                     }),
+                    0b010 => RemoteMetadata::RemoteDir,
+                    0b001 => RemoteMetadata::RemoteCharacterSpecialFile,
+                    0b011 => RemoteMetadata::RemoteBlock,
                     0b101 => RemoteMetadata::RemoteSymlink,
+                    0b110 => RemoteMetadata::RemoteSocket,
+                    0b000 => RemoteMetadata::RemoteNamedPipe,
                     _ => return Err(DeviceError::Adb(format!("Invalid file mode {}", file_type))),
                 };
 
@@ -850,7 +860,11 @@ impl Device {
 
         for entry in self.list_dir(&src)? {
             match entry.metadata {
-                RemoteMetadata::RemoteSymlink => {} // Ignored.
+                RemoteMetadata::RemoteSymlink
+                | RemoteMetadata::RemoteCharacterSpecialFile
+                | RemoteMetadata::RemoteSocket
+                | RemoteMetadata::RemoteBlock
+                | RemoteMetadata::RemoteNamedPipe => {} // Ignored.
                 RemoteMetadata::RemoteDir => {
                     let mut d = dest_dir.clone();
                     d.push(&entry.name);

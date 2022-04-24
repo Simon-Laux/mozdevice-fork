@@ -10,4 +10,7 @@ at "Deployed from [4351c386f60d](https://hg.mozilla.org/hgcustom/version-control
 
 ## Changes I did:
 
-- make struct fields `RemoteDirEntry` and `RemoteFileMetadata` public 
+- make struct fields `RemoteDirEntry` and `RemoteFileMetadata` public
+- list does not fail on special file types anymore (Character, Socket, Block and NamedPipe)
+  - thanks to https://www.livefirelabs.com/unix_tip_trick_shell_script/unix_operating_system_fundamentals/file-types-in-unix.htm for the info about the different file types
+- make `Device::list_dir_flat` public and document that `Device::list_dir` is recursive
